@@ -1,3 +1,5 @@
+// https://docs.x.ai/docs/guides/function-calling
+
 package xai
 
 type ChatRequest struct {

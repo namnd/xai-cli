@@ -1,2 +1,2 @@
 build:
-	go build -o xai-cli
+	go build -o bot

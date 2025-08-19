@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -20,12 +17,9 @@ import (
 var authCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Authenticate by entering xAI API key",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `API key will be stored in ~/.xai/config.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+TODO: improve security`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := configureAPIKey()
 		if err != nil {
@@ -37,16 +31,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(authCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// authCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// authCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func configureAPIKey() error {
@@ -57,7 +41,8 @@ func configureAPIKey() error {
 
 	configDir := filepath.Join(homeDir, ".xai")
 	configFile := filepath.Join(configDir, "config")
-	
+
+	fmt.Print("Enter your xAI API Key: ")
 	apiKey, err := readSecret()
 	if err != nil {
 		return fmt.Errorf("failed to read API key: %w", err)
@@ -68,7 +53,6 @@ func configureAPIKey() error {
 	if apiKey == "" {
 		return fmt.Errorf("API key cannot be empty")
 	}
-
 
 	err = os.MkdirAll(configDir, 0700)
 	if err != nil {

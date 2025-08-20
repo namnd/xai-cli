@@ -64,7 +64,7 @@ func analyze() error {
 		},
 	}
 
-	messages := []xai.Message{
+	messages := []xai.FunctionCallMessage{
 		{
 			Role:    "system",
 			Content: "You are a code analysis assistant. Use the get_file_content function to retrieve file contents and provide insights about the codebase structure, purpose, and key components. Summarize the code and explain its functionality.",
@@ -89,7 +89,7 @@ func analyze() error {
 
 		iteration++
 
-		chatRequest := xai.ChatRequest{
+		chatRequest := xai.FunctionCallRequest{
 			Model:      "grok-3-mini",
 			Messages:   messages,
 			Tools:      tools,
@@ -106,9 +106,14 @@ func analyze() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		var chatResponse xai.ChatResponse
+		var chatResponse xai.FunctionCallResponse
 		if err := json.Unmarshal(response, &chatResponse); err != nil {
 			return fmt.Errorf("failed to parse response: %v", err)
+		}
+
+		if len(chatResponse.Choices) == 0 {
+			fmt.Printf("chat response: %v", chatResponse)
+			break
 		}
 
 		responseMessage := chatResponse.Choices[0].Message
@@ -119,7 +124,9 @@ func analyze() error {
 		}
 
 		for _, toolCall := range responseMessage.ToolCalls {
-			if toolCall.Function.Name == "get_file_content" {
+			var content string
+			switch toolCall.Function.Name {
+			case "get_file_content":
 				var args local.FileRequest
 				if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
 					fmt.Printf("failed to parse tool call arguments: %v", err)
@@ -133,14 +140,15 @@ func analyze() error {
 				}
 
 				resultJSON, _ := json.Marshal(result)
+				content = string(resultJSON)
 
-				messages = append(messages, xai.Message{
-					Role:       "tool",
-					Content:    string(resultJSON),
-					ToolCallID: toolCall.ID,
-				})
 
 			}
+			messages = append(messages, xai.FunctionCallMessage{
+				Role:       "tool",
+				Content:    content,
+				ToolCallID: toolCall.ID,
+			})
 		}
 
 		// Check context timeout

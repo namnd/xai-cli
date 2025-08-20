@@ -2,14 +2,14 @@
 
 package xai
 
-type ChatRequest struct {
-	Model      string    `json:"model"`
-	Messages   []Message `json:"messages"`
-	Tools      []Tool    `json:"tools"`
-	ToolChoice string    `json:"tool_choice"`
+type FunctionCallRequest struct {
+	Model      string                `json:"model"`
+	Messages   []FunctionCallMessage `json:"messages"`
+	Tools      []Tool                `json:"tools"`
+	ToolChoice string                `json:"tool_choice"`
 }
 
-type Message struct {
+type FunctionCallMessage struct {
 	Role       string     `json:"role"`
 	Content    string     `json:"content,omitempty"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
@@ -38,7 +38,7 @@ type FunctionDetails struct {
 	Parameters  map[string]any `json:"parameters"`
 }
 
-type ChatResponse struct {
+type FunctionCallResponse struct {
 	Choices []struct {
 		Message struct {
 			Content   string     `json:"content"`

@@ -1,0 +1,124 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
+package cmd
+
+import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/namnd/xai-cli/local"
+	"github.com/namnd/xai-cli/xai"
+	"github.com/spf13/cobra"
+)
+
+// chatCmd represents the chat command
+var chatCmd = &cobra.Command{
+	Use:   "chat",
+	Short: "Simple chat",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := chat()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(chatCmd)
+}
+
+func chat() error {
+	apiKey, err := local.ReadAPIKey()
+	if err != nil {
+		return fmt.Errorf("failed to read API key: %w", err)
+	}
+
+	messages := []xai.ChatMessage{
+		{
+			Role:    "system",
+			Content: "You are a highly skilled programming assistant. Provide accurate, concise, and practical solutions for coding tasks. Include code snippets, explanations, and best practices when appropriate. Ask for clarification if the query is ambiguous.",
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Starting interactive chat for programming tasks. Type 'exit' to quit.")
+	fmt.Print("You: ")
+
+	for {
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("failed to read input: %v\n", err)
+			continue
+		}
+
+		input = strings.TrimSpace(input)
+
+		if input == "exit" {
+			fmt.Println("Exiting chat...")
+			break
+		}
+
+		if input == "" {
+			fmt.Print("You: ")
+			continue
+		}
+
+		messages = append(messages, xai.ChatMessage{
+			Role:    "user",
+			Content: input,
+		})
+
+		chatRequest := xai.ChatRequest{
+			Model:    "grok-3-mini",
+			Messages: messages,
+		}
+
+		requestBody, err := json.Marshal(chatRequest)
+		if err != nil {
+			return fmt.Errorf("failed to marshal request: %w", err)
+		}
+
+		response, err := xai.MakeAPICall(ctx, apiKey, requestBody)
+		if err != nil {
+			return fmt.Errorf("failed to make API call: %v", err)
+		}
+
+		var chatResponse xai.ChatResponse
+		if err := json.Unmarshal(response, &chatResponse); err != nil {
+			return fmt.Errorf("failed to parse response: %v", err)
+		}
+
+		fmt.Println(chatResponse)
+
+		if len(chatResponse.Choices) == 0 {
+			fmt.Println("No response from API")
+			fmt.Print("You:")
+			continue
+		}
+
+		// Extract assistant response
+		assistantMessage := chatResponse.Choices[0].Message.Content
+		fmt.Printf("Assistant: %s\n", assistantMessage)
+
+		// Add assistant response to history
+		messages = append(messages, xai.ChatMessage{
+			Role:    "assistant",
+			Content: assistantMessage,
+		})
+
+		fmt.Print("You: ")
+	}
+
+	return nil
+}

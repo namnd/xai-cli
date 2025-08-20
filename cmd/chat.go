@@ -99,8 +99,6 @@ func chat() error {
 			return fmt.Errorf("failed to parse response: %v", err)
 		}
 
-		fmt.Println(chatResponse)
-
 		if len(chatResponse.Choices) == 0 {
 			fmt.Println("No response from API")
 			fmt.Print("You:")

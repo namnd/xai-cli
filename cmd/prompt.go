@@ -69,7 +69,7 @@ func runPrompt() error {
 	}
 
 	fmt.Printf("Response: %s\n", resp)
-	
+
 	return nil
 }
 
@@ -92,14 +92,14 @@ func makeAPICall(apiKey, prompt string) (string, error) {
 	client := &http.Client{}
 	payload := map[string]any{
 		"stream": false,
-		"model": "grok-3-mini",
+		"model":  "grok-3-mini",
 		"messages": []map[string]string{
 			{
-				"role": "system",
+				"role":    "system",
 				"content": "You are Grok, a highly intelligent, helpful AI assistant.",
 			},
 			{
-				"role": "user",
+				"role":    "user",
 				"content": prompt,
 			},
 		},
@@ -116,7 +116,7 @@ func makeAPICall(apiKey, prompt string) (string, error) {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer " + apiKey)
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 

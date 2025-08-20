@@ -1,2 +1,2 @@
 build:
-	go build -o bot
+	go build -o ~/.local/bin/xai

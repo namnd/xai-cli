@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/namnd/xai-cli/local"
 	"github.com/namnd/xai-cli/xai"
 	"github.com/spf13/cobra"
@@ -32,6 +33,11 @@ var chatCmd = &cobra.Command{
 }
 
 func init() {
+	if err := local.InitDB(); err != nil {
+		fmt.Printf("failed to initialize database: %v\n", err)
+		os.Exit(1)
+	}
+
 	rootCmd.AddCommand(chatCmd)
 }
 
@@ -48,12 +54,17 @@ func chat() error {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Starting interactive chat for programming tasks. Type 'exit' to quit.")
 	fmt.Print("You: ")
+
+	thread_id, err := uuid.NewV7()
+	if err != nil {
+		return fmt.Errorf("failed to generate UUID V7: %v", err)
+	}
 
 	for {
 		input, err := reader.ReadString('\n')
@@ -94,6 +105,11 @@ func chat() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
+		err = local.StoreChat(thread_id.String(), string(requestBody), string(response))
+		if err != nil {
+			fmt.Printf("failed to store chat history: %v", err)
+		}
+
 		var chatResponse xai.ChatResponse
 		if err := json.Unmarshal(response, &chatResponse); err != nil {
 			return fmt.Errorf("failed to parse response: %v", err)
@@ -115,6 +131,7 @@ func chat() error {
 			Content: assistantMessage,
 		})
 
+		fmt.Println("====================================")
 		fmt.Print("You: ")
 	}
 

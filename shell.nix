@@ -8,6 +8,6 @@ pkgs.mkShell {
     sqlite
   ];
 
-  DB = "/home/namnguyen/.xai/chat_history.db";
+  DB = "/home/namnguyen/.xai/chat.db";
 }
 

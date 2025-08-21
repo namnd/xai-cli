@@ -8,11 +8,14 @@ import (
 	"net/http"
 )
 
+const (
+	API_ENDPOINT = "https://api.x.ai/v1/chat/completions"
+)
+
 func MakeAPICall(ctx context.Context, apiKey string, payload []byte) ([]byte, error) {
 	fmt.Printf(".") // loading
 
-	endpoint := "https://api.x.ai/v1/chat/completions"
-	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, "POST", API_ENDPOINT, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

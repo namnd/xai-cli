@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 */
-package cmd
+package chat
 
 import (
 	"bufio"
@@ -19,7 +19,7 @@ import (
 )
 
 // chatCmd represents the chat command
-var chatCmd = &cobra.Command{
+var ChatCmd = &cobra.Command{
 	Use:   "chat",
 	Short: "Simple chat",
 	Long:  ``,
@@ -37,8 +37,6 @@ func init() {
 		fmt.Printf("failed to initialize database: %v\n", err)
 		os.Exit(1)
 	}
-
-	rootCmd.AddCommand(chatCmd)
 }
 
 func chat() error {

@@ -17,3 +17,7 @@ type ChatResponse struct {
 		Message ChatMessage `json:"message"`
 	} `json:"choices"`
 }
+
+func (c *ChatRequest) UserInitialMessage() string {
+	return c.Messages[1].Content
+}

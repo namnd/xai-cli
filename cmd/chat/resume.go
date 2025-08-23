@@ -34,7 +34,7 @@ var resumeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println(*chat)
+		chat.Display()
 	},
 }
 

@@ -25,6 +25,21 @@ type ChatThread struct {
 	ChatResponse xai.ChatResponse
 }
 
+func (c *ChatThread) Display() {
+	for _, m := range c.ChatRequest.Messages {
+		if m.Role == "system" {
+			continue
+		}
+		fmt.Printf("*%s*> %s\n\n", m.Role, m.Content)
+		fmt.Println("---")
+	}
+
+	for _, c := range c.ChatResponse.Choices {
+		fmt.Printf("*%s*> %s\n\n", c.Message.Role, c.Message.Content)
+		fmt.Println("---")
+	}
+}
+
 func dbPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

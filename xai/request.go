@@ -13,8 +13,6 @@ const (
 )
 
 func MakeAPICall(ctx context.Context, apiKey string, payload []byte) ([]byte, error) {
-	fmt.Printf(".") // loading
-
 	req, err := http.NewRequestWithContext(ctx, "POST", API_ENDPOINT, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)

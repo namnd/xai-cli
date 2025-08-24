@@ -21,7 +21,7 @@ import (
 // chatCmd represents the chat command
 var ChatCmd = &cobra.Command{
 	Use:   "chat",
-	Short: "Simple chat",
+	Short: "Interactive chat",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := chat()

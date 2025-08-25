@@ -59,7 +59,7 @@ func chat() error {
 	fmt.Println("Starting interactive chat for programming tasks. Type 'exit' to quit.")
 	fmt.Print("You: ")
 
-	thread_id, err := uuid.NewV7()
+	threadID, err := uuid.NewV7()
 	if err != nil {
 		return fmt.Errorf("failed to generate UUID V7: %v", err)
 	}
@@ -103,7 +103,7 @@ func chat() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		err = local.StoreChat(thread_id.String(), string(requestBody), string(response))
+		_, err = local.StoreChat(threadID.String(), string(requestBody), string(response))
 		if err != nil {
 			fmt.Printf("failed to store chat history: %v", err)
 		}

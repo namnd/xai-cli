@@ -26,18 +26,8 @@ type ChatThread struct {
 }
 
 func (c *ChatThread) Display() {
-	for _, m := range c.ChatRequest.Messages {
-		if m.Role == "system" {
-			continue
-		}
-		fmt.Printf("*%s*> %s\n\n", m.Role, m.Content)
-		fmt.Println("---")
-	}
-
-	for _, c := range c.ChatResponse.Choices {
-		fmt.Printf("*%s*> %s\n\n", c.Message.Role, c.Message.Content)
-		fmt.Println("---")
-	}
+	s, _ := json.Marshal(c)
+	fmt.Println(string(s))
 }
 
 func dbPath() string {
@@ -72,16 +62,57 @@ func InitDB() error {
 	return nil
 }
 
-func StoreChat(thread_id, chat_request, chat_response string) error {
+func StoreChat(thread_id, chat_request, chat_response string) (*ChatThread, error) {
 	db, err := sql.Open("sqlite3", dbPath())
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		return nil, fmt.Errorf("failed to open database: %v", err)
 	}
 	defer db.Close()
 
 	insertChatSQL := fmt.Sprintf(`INSERT INTO %s (thread_id, chat_request, chat_response) VALUES (?, ?, ?)`, TABLE_NAME)
 	_, err = db.Exec(insertChatSQL, thread_id, chat_request, chat_response)
-	return err
+
+	return &ChatThread{
+		ThreadID: thread_id,
+	}, nil
+
+}
+
+func GetThreadByID(threadID string) (*ChatThread, error) {
+	db, err := sql.Open("sqlite3", dbPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	getThreadQuery := fmt.Sprintf(`SELECT timestamp, chat_request, chat_response FROM %s WHERE thread_id = ? ORDER BY timestamp DESC LIMIT 1`, TABLE_NAME)
+
+	row := db.QueryRow(getThreadQuery, threadID)
+	var chatThread ChatThread
+	var chatRequest, chatResponse string
+
+	err = row.Scan(&chatThread.Timestamp, &chatRequest, &chatResponse)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("threadID %s not found", threadID)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan chat history: %v", err)
+	}
+
+	err = json.Unmarshal([]byte(chatRequest), &chatThread.ChatRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal chatRequest: %v", err)
+	}
+
+	err = json.Unmarshal([]byte(chatResponse), &chatThread.ChatResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal chatResponse: %v", err)
+	}
+
+	chatThread.ThreadID = threadID
+
+	return &chatThread, nil
 }
 
 func GetChatMinusT(t int) (*ChatThread, error) {
@@ -129,6 +160,8 @@ func GetChatMinusT(t int) (*ChatThread, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal chatResponse: %v", err)
 	}
+
+	chatThread.ThreadID = threadID
 
 	return &chatThread, nil
 }

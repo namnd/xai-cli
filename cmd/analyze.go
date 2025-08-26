@@ -8,25 +8,44 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/namnd/xai-cli/local"
+	"github.com/namnd/xai-cli/local/functions"
 	"github.com/namnd/xai-cli/xai"
 	"github.com/spf13/cobra"
 )
 
 // analyzeCmd represents the analyze command
 var analyzeCmd = &cobra.Command{
-	Use:   "analyze",
-	Short: "Analyze codebase in the current working directory",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "analyze [file_path]",
+	Short: "Analyze a file",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := analyze()
+		if len(args) == 0 {
+			fmt.Fprintf(os.Stderr, "Please provide a file_path\n")
+			os.Exit(1)
+		}
+
+		_, err := os.Stat(args[0])
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "File not found")
+			}
+			fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+			os.Exit(1)
+		}
+
+		file, err := os.Open(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error openning file: %v\n", err)
+			os.Exit(1)
+		}
+		defer file.Close() // Ensure the file is closed after checking
+
+		err = analyze(args[0])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
@@ -38,42 +57,25 @@ func init() {
 	rootCmd.AddCommand(analyzeCmd)
 }
 
-func analyze() error {
+func analyze(filePath string) error {
 	apiKey, err := local.ReadAPIKey()
 	if err != nil {
 		return fmt.Errorf("failed to read API key: %w", err)
 	}
 
-	tools := []xai.Tool{
+	messages := []xai.ChatMessage{
 		{
-			Type: "function",
-			Function: xai.FunctionDetails{
-				Name:        "get_file_content",
-				Description: "Retrieve the content of a specific file in the codebase",
-				Parameters: map[string]any{
-					"type": "object",
-					"properties": map[string]any{
-						"file_path": map[string]any{
-							"type":        "string",
-							"description": "Path to the file in the codebase",
-						},
-					},
-					"required": []string{"file_path"},
-				},
-			},
+			Role:    "system",
+			Content: functions.SystemPrompt,
 		},
 	}
 
-	messages := []xai.FunctionCallMessage{
-		{
-			Role:    "system",
-			Content: "You are a code analysis assistant. Use the get_file_content function to retrieve file contents and provide insights about the codebase structure, purpose, and key components. Summarize the code and explain its functionality.",
-		},
-		{
-			Role:    "user",
-			Content: "Analyze the main.go file in my codebase.",
-		},
-	}
+	absPath, err := filepath.Abs(filePath)
+
+	messages = append(messages, xai.ChatMessage{
+		Role:    "user",
+		Content: fmt.Sprintf("Analyze the %s file in my codebase.", absPath),
+	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -81,18 +83,23 @@ func analyze() error {
 	const MAX_ITERATION = 10
 	iteration := 0
 
+	threadID, err := uuid.NewV7()
+	if err != nil {
+		return fmt.Errorf("failed to generate UUID V7: %v", err)
+	}
+
 	for {
 		if iteration >= MAX_ITERATION {
-			fmt.Println("max iteration limit reached, exit")
+			fmt.Println("Max iteration limit reached, exit")
 			os.Exit(1)
 		}
 
 		iteration++
 
-		chatRequest := xai.FunctionCallRequest{
+		chatRequest := xai.ChatRequest{
 			Model:      "grok-3-mini",
 			Messages:   messages,
-			Tools:      tools,
+			Tools:      functions.Tools,
 			ToolChoice: "auto",
 		}
 
@@ -106,7 +113,12 @@ func analyze() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		var chatResponse xai.FunctionCallResponse
+		chatThread, err := local.StoreChat(threadID.String(), string(requestBody), string(response))
+		if err != nil {
+			return fmt.Errorf("failed to store chat history: %v", err)
+		}
+
+		var chatResponse xai.ChatResponse
 		if err := json.Unmarshal(response, &chatResponse); err != nil {
 			return fmt.Errorf("failed to parse response: %v", err)
 		}
@@ -119,7 +131,11 @@ func analyze() error {
 		responseMessage := chatResponse.Choices[0].Message
 
 		if len(responseMessage.ToolCalls) == 0 {
-			fmt.Printf("assistant response: %s", responseMessage.Content)
+			// completed analyze
+			chatThread.ChatRequest = chatRequest
+			chatThread.ChatResponse = chatResponse
+			s, _ := json.Marshal(chatThread)
+			fmt.Println(string(s))
 			break
 		}
 
@@ -127,24 +143,23 @@ func analyze() error {
 			var content string
 			switch toolCall.Function.Name {
 			case "get_file_content":
-				var args local.FileRequest
+				var args functions.FileRequest
 				if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
 					fmt.Printf("failed to parse tool call arguments: %v", err)
 					continue
 				}
 
-				result, err := local.GetFileContent(args.FilePath)
+				result, err := functions.GetFileContent(args.FilePath)
 				if err != nil {
-					fmt.Println("failed to execute function: %w", err)
+					fmt.Printf("failed to execute function: %v", err)
 					continue
 				}
 
 				resultJSON, _ := json.Marshal(result)
 				content = string(resultJSON)
-
-
 			}
-			messages = append(messages, xai.FunctionCallMessage{
+
+			messages = append(messages, xai.ChatMessage{
 				Role:       "tool",
 				Content:    content,
 				ToolCallID: toolCall.ID,

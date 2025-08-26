@@ -1,10 +1,12 @@
-package local
+package functions
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/namnd/xai-cli/xai"
 )
 
 type FileRequest struct {
@@ -15,6 +17,24 @@ type FileContent struct {
 	FilePath string `json:"file_path" description:"Path to the file"`
 	Content  string `json:"content" description:"Content of the file"`
 	Language string `json:"language" description:"Programming language of the file"`
+}
+
+var file_content_definition = xai.Tool{
+	Type: "function",
+	Function: xai.FunctionDetails{
+		Name:        "get_file_content",
+		Description: "Retrieve the content of a specific file in the codebase",
+		Parameters: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"file_path": map[string]any{
+					"type":        "string",
+					"description": "Path to the file in the codebase",
+				},
+			},
+			"required": []string{"file_path"},
+		},
+	},
 }
 
 func GetFileContent(filePath string) (FileContent, error) {

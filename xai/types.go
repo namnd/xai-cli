@@ -1,17 +1,18 @@
+// https://docs.x.ai/docs/guides/chat
 // https://docs.x.ai/docs/guides/function-calling
 
 package xai
 
-type FunctionCallRequest struct {
-	Model      string                `json:"model"`
-	Messages   []FunctionCallMessage `json:"messages"`
-	Tools      []Tool                `json:"tools"`
-	ToolChoice string                `json:"tool_choice"`
+type ChatRequest struct {
+	Model      string        `json:"model"`
+	Messages   []ChatMessage `json:"messages"`
+	Tools      []Tool        `json:"tools,omitempty"`
+	ToolChoice string        `json:"tool_choice,omitempty"`
 }
 
-type FunctionCallMessage struct {
+type ChatMessage struct {
 	Role       string     `json:"role"`
-	Content    string     `json:"content,omitempty"`
+	Content    string     `json:"content"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
@@ -38,11 +39,12 @@ type FunctionDetails struct {
 	Parameters  map[string]any `json:"parameters"`
 }
 
-type FunctionCallResponse struct {
+type ChatResponse struct {
 	Choices []struct {
-		Message struct {
-			Content   string     `json:"content"`
-			ToolCalls []ToolCall `json:"tool_calls"`
-		} `json:"message"`
+		Message ChatMessage `json:"message"`
 	} `json:"choices"`
+}
+
+func (c *ChatRequest) UserInitialMessage() string {
+	return c.Messages[1].Content
 }

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,8 +19,8 @@ import (
 
 // analyzeCmd represents the analyze command
 var analyzeCmd = &cobra.Command{
-	Use:   "analyze [file_path]",
-	Short: "Analyze a file",
+	Use:   "analyze [file_path|directory]",
+	Short: "Analyze a file or directory",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -70,11 +69,9 @@ func analyze(filePath string) error {
 		},
 	}
 
-	absPath, err := filepath.Abs(filePath)
-
 	messages = append(messages, xai.ChatMessage{
 		Role:    "user",
-		Content: fmt.Sprintf("Analyze the %s file in my codebase.", absPath),
+		Content: fmt.Sprintf("Analyze file %s", filePath),
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)

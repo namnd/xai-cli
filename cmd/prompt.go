@@ -26,6 +26,7 @@ var promptCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		userPrompt := strings.Join(args, " ")
+		userPrompt = strings.ReplaceAll(userPrompt, "\\n", "\n")
 		userPrompt = strings.TrimSpace(userPrompt)
 		userPrompt = strings.Trim(userPrompt, "\n")
 		if userPrompt == "" {

@@ -32,13 +32,6 @@ var ChatCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	if err := local.InitDB(); err != nil {
-		fmt.Printf("failed to initialize database: %v\n", err)
-		os.Exit(1)
-	}
-}
-
 func chat() error {
 	apiKey, err := local.ReadAPIKey()
 	if err != nil {

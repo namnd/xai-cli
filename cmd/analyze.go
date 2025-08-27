@@ -69,9 +69,22 @@ func analyze(filePath string) error {
 		},
 	}
 
+	fileInfo, _ := os.Stat(filePath)
+
+	var files []string
+	if fileInfo.IsDir() {
+		files, err = functions.ScanDirectory(filePath)
+
+		if err != nil {
+			return fmt.Errorf("failed to scan directory: %v", err)
+		}
+	} else {
+		files = append(files, filePath)
+	}
+
 	messages = append(messages, xai.ChatMessage{
 		Role:    "user",
-		Content: fmt.Sprintf("Analyze file %s", filePath),
+		Content: fmt.Sprintf("Analyze codebase files: %v, then summarize the project. Try to keep it short & concise", files),
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)

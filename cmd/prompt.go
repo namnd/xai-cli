@@ -103,7 +103,7 @@ func runPrompt(userPrompt string) error {
 	}
 	response, err := xai.MakeAPICall(ctx, apiKey, requestBody)
 
-	chatThread, err := local.StoreChat(threadID, string(requestBody), string(response))
+	chatThread, err := local.StoreChat(threadID, userPrompt, string(requestBody), string(response))
 	if err != nil {
 		fmt.Printf("failed to store prompt: %v", err)
 	}

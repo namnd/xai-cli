@@ -82,6 +82,7 @@ func analyze(filePath string) error {
 		files = append(files, filePath)
 	}
 
+	prompt := "analyze " + filePath
 	messages = append(messages, xai.ChatMessage{
 		Role:    "user",
 		Content: fmt.Sprintf("Analyze codebase files: %v, then summarize the project. Try to keep it short & concise", files),
@@ -123,7 +124,7 @@ func analyze(filePath string) error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		chatThread, err := local.StoreChat(threadID.String(), string(requestBody), string(response))
+		chatThread, err := local.StoreChat(threadID.String(), prompt, string(requestBody), string(response))
 		if err != nil {
 			return fmt.Errorf("failed to store chat history: %v", err)
 		}
@@ -144,6 +145,7 @@ func analyze(filePath string) error {
 			// completed analyze
 			chatThread.ChatRequest = chatRequest
 			chatThread.ChatResponse = chatResponse
+			chatThread.Prompt = prompt
 			s, _ := json.Marshal(chatThread)
 			fmt.Println(string(s))
 			break

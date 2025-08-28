@@ -6,6 +6,7 @@ package chat
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/namnd/xai-cli/local"
 	"github.com/spf13/cobra"
@@ -24,7 +25,7 @@ var historyCmd = &cobra.Command{
 		}
 
 		for i, h := range history {
-			fmt.Println(fmt.Sprintf("%d)", i), h.ChatRequest.UserInitialMessage())
+			fmt.Println(fmt.Sprintf("%d)", i), strings.ReplaceAll(h.Prompt, "\n", ", "))
 		}
 	},
 }

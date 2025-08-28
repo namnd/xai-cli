@@ -96,7 +96,7 @@ func chat() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		_, err = local.StoreChat(threadID.String(), string(requestBody), string(response))
+		_, err = local.StoreChat(threadID.String(), input, string(requestBody), string(response))
 		if err != nil {
 			fmt.Printf("failed to store chat history: %v", err)
 		}

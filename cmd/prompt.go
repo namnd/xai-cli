@@ -63,7 +63,15 @@ func runPrompt(userPrompt string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get threadByID: %v", err)
 		}
+
 		messages = thread.ChatRequest.Messages
+		if len(thread.ChatResponse.Choices) > 0 {
+			messages = append(messages, xai.ChatMessage{
+				Role:    "assistant",
+				Content: thread.ChatResponse.Choices[0].Message.Content,
+			})
+		}
+
 	} else {
 		id, err := uuid.NewV7()
 		if err != nil {

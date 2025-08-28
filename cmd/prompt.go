@@ -58,11 +58,13 @@ func runPrompt(userPrompt string) error {
 	defer cancel()
 
 	var messages []xai.ChatMessage
+	var originalPrompt = userPrompt
 	if threadID != "" {
 		thread, err := local.GetThreadByID(threadID)
 		if err != nil {
 			return fmt.Errorf("failed to get threadByID: %v", err)
 		}
+		originalPrompt = thread.OriginalPrompt
 
 		messages = thread.ChatRequest.Messages
 		if len(thread.ChatResponse.Choices) > 0 {
@@ -103,7 +105,7 @@ func runPrompt(userPrompt string) error {
 	}
 	response, err := xai.MakeAPICall(ctx, apiKey, requestBody)
 
-	chatThread, err := local.StoreChat(threadID, userPrompt, string(requestBody), string(response))
+	chatThread, err := local.StoreChat(threadID, originalPrompt, userPrompt, string(requestBody), string(response))
 	if err != nil {
 		fmt.Printf("failed to store prompt: %v", err)
 	}

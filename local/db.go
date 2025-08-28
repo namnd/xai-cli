@@ -18,12 +18,13 @@ const (
 )
 
 type ChatThread struct {
-	ID           string
-	ThreadID     string
-	Timestamp    time.Time
-	Prompt       string
-	ChatRequest  xai.ChatRequest
-	ChatResponse xai.ChatResponse
+	ID             string
+	ThreadID       string
+	Timestamp      time.Time
+	OriginalPrompt string
+	Prompt         string
+	ChatRequest    xai.ChatRequest
+	ChatResponse   xai.ChatResponse
 }
 
 func (c *ChatThread) Display() {
@@ -52,6 +53,7 @@ func InitDB() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		thread_id TEXT,
 		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+		original_prompt TEXT,
 		prompt TEXT,
 		chat_request TEXT,
 		chat_response TEXT);`, TABLE_NAME)
@@ -64,15 +66,15 @@ func InitDB() error {
 	return nil
 }
 
-func StoreChat(thread_id, prompt, chat_request, chat_response string) (*ChatThread, error) {
+func StoreChat(thread_id, original_prompt, prompt, chat_request, chat_response string) (*ChatThread, error) {
 	db, err := sql.Open("sqlite3", dbPath())
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %v", err)
 	}
 	defer db.Close()
 
-	insertChatSQL := fmt.Sprintf(`INSERT INTO %s (thread_id, prompt, chat_request, chat_response) VALUES (?, ?, ?, ?)`, TABLE_NAME)
-	_, err = db.Exec(insertChatSQL, thread_id, prompt, chat_request, chat_response)
+	insertChatSQL := fmt.Sprintf(`INSERT INTO %s (thread_id, original_prompt, prompt, chat_request, chat_response) VALUES (?, ?, ?, ?, ?)`, TABLE_NAME)
+	_, err = db.Exec(insertChatSQL, thread_id, original_prompt, prompt, chat_request, chat_response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store chat: %v", err)
 	}
@@ -90,13 +92,13 @@ func GetThreadByID(threadID string) (*ChatThread, error) {
 	}
 	defer db.Close()
 
-	getThreadQuery := fmt.Sprintf(`SELECT timestamp, chat_request, chat_response FROM %s WHERE thread_id = ? ORDER BY timestamp DESC LIMIT 1`, TABLE_NAME)
+	getThreadQuery := fmt.Sprintf(`SELECT timestamp, original_prompt, chat_request, chat_response FROM %s WHERE thread_id = ? ORDER BY timestamp DESC LIMIT 1`, TABLE_NAME)
 
 	row := db.QueryRow(getThreadQuery, threadID)
 	var chatThread ChatThread
 	var chatRequest, chatResponse string
 
-	err = row.Scan(&chatThread.Timestamp, &chatRequest, &chatResponse)
+	err = row.Scan(&chatThread.Timestamp, &chatThread.OriginalPrompt, &chatRequest, &chatResponse)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("threadID %s not found", threadID)
 	}
@@ -140,14 +142,14 @@ func GetChatMinusT(t int) (*ChatThread, error) {
 		return nil, fmt.Errorf("failed to scan chat thread: %v", err)
 	}
 
-	getQuery := fmt.Sprintf(`SELECT timestamp, prompt, chat_request, chat_response FROM %s WHERE thread_id = ? ORDER BY timestamp DESC LIMIT 1`, TABLE_NAME)
+	getQuery := fmt.Sprintf(`SELECT timestamp, original_prompt, prompt, chat_request, chat_response FROM %s WHERE thread_id = ? ORDER BY timestamp DESC LIMIT 1`, TABLE_NAME)
 
 	row = db.QueryRow(getQuery, threadID)
 
 	var chatThread ChatThread
 	var chatRequest, chatResponse string
 
-	err = row.Scan(&chatThread.Timestamp, &chatThread.Prompt, &chatRequest, &chatResponse)
+	err = row.Scan(&chatThread.Timestamp, &chatThread.OriginalPrompt, &chatThread.Prompt, &chatRequest, &chatResponse)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("chat T-%d not found", t)
 	}
@@ -178,7 +180,7 @@ func ListRecentChatThread() ([]ChatThread, error) {
 	}
 	defer db.Close()
 
-	listQuery := fmt.Sprintf(`SELECT thread_id, timestamp, prompt, chat_request, chat_response FROM %s GROUP BY thread_id ORDER BY timestamp DESC`, TABLE_NAME)
+	listQuery := fmt.Sprintf(`SELECT thread_id, timestamp, original_prompt, chat_request, chat_response FROM %s GROUP BY thread_id ORDER BY timestamp DESC`, TABLE_NAME)
 
 	rows, err := db.Query(listQuery)
 
@@ -186,7 +188,7 @@ func ListRecentChatThread() ([]ChatThread, error) {
 	for rows.Next() {
 		var chatThread ChatThread
 		var chatRequest, chatResponse string
-		err := rows.Scan(&chatThread.ID, &chatThread.Timestamp, &chatThread.Prompt, &chatRequest, &chatResponse)
+		err := rows.Scan(&chatThread.ID, &chatThread.Timestamp, &chatThread.OriginalPrompt, &chatRequest, &chatResponse)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}

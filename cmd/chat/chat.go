@@ -57,6 +57,9 @@ func chat() error {
 		return fmt.Errorf("failed to generate UUID V7: %v", err)
 	}
 
+	var i int = 0
+	var originalPrompt string
+
 	for {
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -75,6 +78,12 @@ func chat() error {
 			fmt.Print("You: ")
 			continue
 		}
+
+		if i == 0 {
+			originalPrompt = input
+		}
+
+		i++
 
 		messages = append(messages, xai.ChatMessage{
 			Role:    "user",
@@ -96,7 +105,7 @@ func chat() error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		_, err = local.StoreChat(threadID.String(), input, string(requestBody), string(response))
+		_, err = local.StoreChat(threadID.String(), originalPrompt, input, string(requestBody), string(response))
 		if err != nil {
 			fmt.Printf("failed to store chat history: %v", err)
 		}

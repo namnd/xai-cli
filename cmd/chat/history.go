@@ -25,7 +25,7 @@ var historyCmd = &cobra.Command{
 		}
 
 		for i, h := range history {
-			fmt.Println(fmt.Sprintf("%d)", i), strings.ReplaceAll(h.Prompt, "\n", ", "))
+			fmt.Println(fmt.Sprintf("%d)", i), strings.ReplaceAll(h.OriginalPrompt, "\n", ", "))
 		}
 	},
 }

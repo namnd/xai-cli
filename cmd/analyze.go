@@ -124,7 +124,7 @@ func analyze(filePath string) error {
 			return fmt.Errorf("failed to make API call: %v", err)
 		}
 
-		chatThread, err := local.StoreChat(threadID.String(), prompt, string(requestBody), string(response))
+		chatThread, err := local.StoreChat(threadID.String(), prompt, prompt, string(requestBody), string(response))
 		if err != nil {
 			return fmt.Errorf("failed to store chat history: %v", err)
 		}

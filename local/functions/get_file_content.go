@@ -57,18 +57,7 @@ func GetFileContent(filePath string) (FileContent, error) {
 
 	// Determine language based on file extension
 	extension := strings.ToLower(filepath.Ext(filePath))
-	languageMap := map[string]string{
-		".go":   "go",
-		".py":   "python",
-		".js":   "javascript",
-		".ts":   "typescript",
-		".java": "java",
-		".cpp":  "cpp",
-		".c":    "c",
-		".cs":   "csharp",
-		".rb":   "ruby",
-	}
-	language, ok := languageMap[extension]
+	language, ok := SupportedLanguages[extension]
 	if !ok {
 		language = "unknown"
 	}

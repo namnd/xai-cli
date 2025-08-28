@@ -73,6 +73,9 @@ func StoreChat(thread_id, prompt, chat_request, chat_response string) (*ChatThre
 
 	insertChatSQL := fmt.Sprintf(`INSERT INTO %s (thread_id, prompt, chat_request, chat_response) VALUES (?, ?, ?, ?)`, TABLE_NAME)
 	_, err = db.Exec(insertChatSQL, thread_id, prompt, chat_request, chat_response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store chat: %v", err)
+	}
 
 	return &ChatThread{
 		ThreadID: thread_id,

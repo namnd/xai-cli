@@ -82,7 +82,7 @@ func analyze(filePath string) error {
 		files = append(files, filePath)
 	}
 
-	prompt := "analyze " + filePath
+	prompt := "Analyze " + filePath
 	messages = append(messages, xai.ChatMessage{
 		Role:    "user",
 		Content: fmt.Sprintf("Analyze codebase files: %v, then summarize the project. Try to keep it short & concise", files),

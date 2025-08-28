@@ -3,7 +3,6 @@ package functions
 import (
 	"io/fs"
 	"path/filepath"
-	"slices"
 )
 
 var importantExts = []string{".go", ".js", ".py", "README.md"}
@@ -16,7 +15,7 @@ func ScanDirectory(dir string) ([]string, error) {
 		}
 
 		if !info.IsDir() { // Only files, not directories
-			if slices.Contains(importantExts, filepath.Ext(path)) {
+			if _, found := SupportedLanguages[filepath.Ext(path)]; found {
 				files = append(files, path)
 			}
 		}

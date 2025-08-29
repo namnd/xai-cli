@@ -145,6 +145,7 @@ func analyze(filePath string) error {
 			// completed analyze
 			chatThread.ChatRequest = chatRequest
 			chatThread.ChatResponse = chatResponse
+			chatThread.OriginalPrompt = prompt
 			chatThread.Prompt = prompt
 			chatThread.ThreadID = threadID.String()
 			s, _ := json.Marshal(chatThread)

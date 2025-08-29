@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 )
 
-var importantExts = []string{".go", ".js", ".py", "README.md"}
-
 func ScanDirectory(dir string) ([]string, error) {
 	var files []string
 	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {

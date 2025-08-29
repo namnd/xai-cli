@@ -115,6 +115,7 @@ func runPrompt(userPrompt string) error {
 		return fmt.Errorf("failed to parse response: %v", err)
 	}
 
+	chatThread.ThreadID = threadID
 	chatThread.ChatRequest = chatRequest
 	chatThread.ChatResponse = chatResponse
 

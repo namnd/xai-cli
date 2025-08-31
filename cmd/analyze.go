@@ -15,6 +15,7 @@ import (
 	"github.com/namnd/xai-cli/local/functions"
 	"github.com/namnd/xai-cli/xai"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // analyzeCmd represents the analyze command
@@ -108,7 +109,7 @@ func analyze(filePath string) error {
 		iteration++
 
 		chatRequest := xai.ChatRequest{
-			Model:      "grok-3-mini",
+			Model:      viper.GetString("model"),
 			Messages:   messages,
 			Tools:      functions.Tools,
 			ToolChoice: "auto",

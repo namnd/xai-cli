@@ -15,6 +15,7 @@ import (
 	"github.com/namnd/xai-cli/local"
 	"github.com/namnd/xai-cli/xai"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var threadID string
@@ -95,7 +96,7 @@ func runPrompt(userPrompt string) error {
 	})
 
 	chatRequest := xai.ChatRequest{
-		Model:    "grok-3-mini",
+		Model:    viper.GetString("model"),
 		Messages: messages,
 	}
 

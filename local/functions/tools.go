@@ -15,6 +15,7 @@ var SupportedLanguages = map[string]string{
 	".c":    "c",
 	".cs":   "csharp",
 	".rb":   "ruby",
+	".lua":  "lua",
 }
 
 var Tools = []xai.Tool{

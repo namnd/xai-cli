@@ -23,7 +23,7 @@ var threadID string
 // promptCmd represents the prompt command
 var promptCmd = &cobra.Command{
 	Use:   "prompt [something]",
-	Short: "Enter a prompt to get response from xAI",
+	Short: "Enter a prompt to get (JSON format) response from xAI (for xai.nvim plugin)",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		userPrompt := strings.Join(args, " ")

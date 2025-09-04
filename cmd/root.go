@@ -16,7 +16,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "xai-cli",
+	Use:   "xai",
 	Short: "xAI wrapper CLI for coding productivity",
 	Long: `A WIP CLI tool, built on top of xAI models (grok-3-mini, grok-code-fast-1 & grok-4)
 
